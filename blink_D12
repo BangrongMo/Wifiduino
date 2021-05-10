@@ -1,0 +1,59 @@
+#define BLINKER_PRINT Serial
+#define BLINKER_WIFI
+#include <Blinker.h>
+
+char auth[] = "512161d93b5b";
+char ssid[] = "Ruckus-Wireless-2";
+char pswd[] = "1029384756";
+boolean flag=false;
+
+// 新建组件对象
+BlinkerButton Button1("btn-abc");
+BlinkerNumber Number1("num-abc");
+BlinkerNumber Number2("num-abc-demo");
+int counter = 0;
+
+// 按下按键即会执行该函数
+void button1_callback(const String & state) {
+    BLINKER_LOG("get button state: ", state);
+    flag=digitalRead(LED_BUILTIN);
+    digitalWrite(LED_BUILTIN, !flag);
+    if(flag){
+          analogWrite(D12, 128);
+    }else
+    {
+      analogWrite(D12,0);
+    }
+    flag=!flag;
+}
+
+// 如果未绑定的组件被触发，则会执行其中内容
+void dataRead(const String & data)
+{
+    BLINKER_LOG("Blinker readString: ", data);
+    counter++;
+    Number1.print(counter);
+    Number2.print(counter);
+}
+
+
+void setup() {
+    // 初始化串口
+    Serial.begin(115200);
+
+    #if defined(BLINKER_PRINT)
+        BLINKER_DEBUG.stream(BLINKER_PRINT);
+    #endif
+    
+    // 初始化有LED的IO
+    pinMode(LED_BUILTIN, OUTPUT);
+    digitalWrite(LED_BUILTIN, HIGH);
+    // 初始化blinker
+    Blinker.begin(auth, ssid, pswd);
+    Blinker.attachData(dataRead);
+    Button1.attach(button1_callback);
+}
+
+void loop() {
+    Blinker.run();
+}
